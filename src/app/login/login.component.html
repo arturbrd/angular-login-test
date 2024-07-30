@@ -1,0 +1,17 @@
+<p>login works!</p>
+
+<form role="form" (submit)="login()" [hidden]="isLoggedIn()">
+    <label for="login">Login</label>
+    <br>
+    <input name="username" type="text" [(ngModel)]="in_username">
+    <br><br>
+    <label for="password">Hasło</label>
+    <br>
+    <input name="password" type="password" [(ngModel)]="in_password">
+    <br>
+    <button type="submit">Zaloguj się</button>
+<br><br>
+
+</form>
+
+<button (click)="logout()" [hidden]="!isLoggedIn()">Wyloguj się</button>
