@@ -117,5 +117,19 @@ export class LoginService {
   getUser() {
     return this.cookie.get("username");
   }
+
+  onInit() {
+    console.log("onInit login service()")
+    if (this.cookie.check("expires")) {
+      const now = new Date();
+      this.timeout = setTimeout(() => {
+        if (confirm("Sesja wkrótce wygasa! Przedłużyć?")) {
+          this.refresh();
+        } else {
+          this.logout();   
+        }
+      }, (new Date(this.cookie.get("expires")).getTime()-now.getTime()-8000));
+    }
+  }
   
 }
