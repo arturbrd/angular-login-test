@@ -1,16 +1,16 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
-export class AdminDataService {
-  private apiUrl = "http://localhost:8080/api/admin-data";
-  constructor(private http: HttpClient) { }
+export class UserDataService {
+  private http = inject(HttpClient);
+  constructor() { }
 
   fetchData(): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-    return this.http.get<any>(this.apiUrl, { headers, withCredentials: true });
+    return this.http.get<any>("http://localhost:8080/api/user-data", { headers, withCredentials: true });
   }
 }

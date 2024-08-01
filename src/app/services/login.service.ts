@@ -6,61 +6,116 @@ import { JwtHelperService } from '@auth0/angular-jwt';
 import { CookieService } from 'ngx-cookie-service';
 
 
+interface Response {
+  username: string,
+  role: string,
+  expires: string
+}
+
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class LoginService {
-  private apiUrl = 'http://localhost:8080/login';
-  private tokenName = "jwt_token";
-  private isAuthSub = new BehaviorSubject<boolean>(false);
-  private loggedUser: string = "";
-  private jwtHelper = inject(JwtHelperService);
+  private apiLoginUrl = 'http://localhost:8080/login';
+  private apiLogoutUrl = 'http://localhost:8080/logout';
+  private apiRefreshUrl = 'http://localhost:8080/refresh';
+  public loggedUser: string = "";
+  private timeout: number | null = null;
 
-  constructor(private http: HttpClient, private router: Router, private cookieService: CookieService) { }
+  constructor(private http: HttpClient, private router: Router, private cookie: CookieService) { }
 
   login(data: {username: string, password: string, _csrf: string}): Observable<any> {
   
-    const headers = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded',
-            'X-Requested-With': 'XMLHttpRequest'
-     });
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
 
-    let params = new HttpParams();
-    params = params.set("username", data.username);
-    params = params.set("password", data.password);
-    params = params.set("_csrf", this.cookieService.get("XSRF-TOKEN"));
-    console.log(`login(): params.toString(): ${params.toString()}`)
-
-
-
-    return this.http.post<any>(this.apiUrl, params.toString(), { headers, withCredentials: true })
-      .pipe(tap((tokens) => {
-        this.loggedUser = data.username;
-        localStorage.setItem(this.tokenName, tokens.jwt);
-        this.isAuthSub.next(true);
-      }));
+    return this.http.post<any>(this.apiLoginUrl, data, { headers, withCredentials: true })
+      .pipe(tap((resp) => this.afterLogin(resp)));
   }
+
+  afterLogin(resp: Response) {
+    sessionStorage.setItem("loggedIn", "true");
+    // this.isAuthSub.next(true);
+    let expires = new Date(resp.expires);
+    console.log("resp.expires: ", resp.expires, "\nexpires: ", expires);
+    this.cookie.set("username", resp.username, expires);
+    this.cookie.set("role", resp.role, expires);
+    this.cookie.set("expires", expires.toUTCString(), expires);
+    const now = new Date();
+    const cookieTime = new Date(this.cookie.get("expires"));
+    console.log("now: ", now, "\ncookieTime: ", cookieTime, "\nraw cookie: ", this.cookie.get("expires"));
+    console.log(resp);
+    this.timeout = setTimeout(() => {
+        if (confirm("Sesja wkrótce wygasa! Przedłużyć?")) {
+          this.refresh();
+        } else {
+          this.logout();   
+        }
+      }, (new Date(this.cookie.get("expires")).getTime()-now.getTime()-8000));
+  }
+  
 
   logout(): void {
     console.log("logout())");
-    localStorage.removeItem(this.tokenName);
-    this.router.navigate(['/main-page']);
-    this.isAuthSub.next(false);
+    if (this.timeout !== null) {
+      clearTimeout(this.timeout);
+    }
+    this.http.get<any>(this.apiLogoutUrl, { withCredentials: true }).subscribe({
+      complete: () => {
+        this.router.navigate(['/main-page']);
+        this.cookie.delete("username");
+        this.cookie.delete("role");
+        this.cookie.delete("expires");
+      },
+      error: () => {
+        alert("Nie udało się wylogować");
+        this.router.navigate(['/main-page']);
+        this.cookie.delete("username");
+        this.cookie.delete("role");
+        this.cookie.delete("expires");
+      }
+    })
+    
+  }
+
+  refresh() {
+    console.log("refresh()")
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+
+    this.http.get<any>(this.apiRefreshUrl, { headers, withCredentials: true })
+      .pipe(tap((resp) => this.afterLogin(resp))).subscribe();
   }
 
   isLoggedIn() {
-    return this.isAuthSub.value;
+    return this.cookie.check("username");
   }
 
   isAdmin() {
-    let decoded = this.jwtHelper.decodeToken();
-    console.log("isAdmin(): ", decoded);
-    if (decoded.admin) return true;
-    return false;
+    return this.cookie.get("role") == "ROLE_ADMIN";
   }
 
   getCsrf(): Observable<any> {
     console.log("getCsrf(): dziala");
     const headers = new HttpHeaders({ 'Content-Type': 'application/x-www-from-urlencoded' });
-    return this.http.get<any>(this.apiUrl, { headers, withCredentials: true });
+    return this.http.get<any>(this.apiLoginUrl, { headers, withCredentials: true });
   }
+
+  isExpired(): boolean {
+    let expired = false;
+
+    if (this.cookie.check("username")) {
+      const now = new Date();
+      if (!this.cookie.check("expires") || (new Date(this.cookie.get("expires"))) <= now) {
+        this.logout();
+        expired = true;
+      }
+    }
+    console.log("isExpired(): ", expired);
+    
+    return expired;
+  }
+
+  getUser() {
+    return this.cookie.get("username");
+  }
+  
 }

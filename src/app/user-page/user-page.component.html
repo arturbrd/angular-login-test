@@ -1,1 +1,7 @@
 <p>user-page works!</p>
+<button (click)="fetchData()">pobierz dane</button>
+
+<div [hidden]="!display()">
+    <br>
+    <p>Dane z serwera: {{display()}}</p>
+</div>

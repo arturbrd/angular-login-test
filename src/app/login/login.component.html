@@ -8,10 +8,11 @@
     <label for="password">Hasło</label>
     <br>
     <input name="password" type="password" [(ngModel)]="in_password">
-    <br>
+    <br><br>
     <button type="submit">Zaloguj się</button>
-<br><br>
-
+    <p [hidden]="!loginFailed">Nie udało się zalogować</p>
+<br>
 </form>
 
+<p [hidden]="!isLoggedIn()">Zalogowano jako {{getUser()}}</p>
 <button (click)="logout()" [hidden]="!isLoggedIn()">Wyloguj się</button>

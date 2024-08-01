@@ -2,7 +2,7 @@ import { ApplicationConfig, importProvidersFrom, provideZoneChangeDetection } fr
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
-import { provideHttpClient, withFetch, withInterceptors, withInterceptorsFromDi } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withInterceptorsFromDi } from '@angular/common/http';
 import { JwtModule,   } from '@auth0/angular-jwt';
 import { loginInterceptor } from './interceptors/login.interceptor';
 import { csrfInterceptor } from './interceptors/csrf.interceptor';
@@ -16,5 +16,5 @@ export const appConfig: ApplicationConfig = {
     config: {
       tokenGetter: tokenGetter
     }
-  })), provideHttpClient(withInterceptors([loginInterceptor, csrfInterceptor]), withInterceptorsFromDi())],
+  })), provideHttpClient(withInterceptors([csrfInterceptor, loginInterceptor]), withInterceptorsFromDi())],
 };

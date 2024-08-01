@@ -3,7 +3,7 @@
   <ul><a routerLink="/user-page" routerLinkActive="active" ariaCurrentWhenActive="page">Strona dla użytkownika</a></ul>
   <ul><a routerLink="/admin-page" routerLinkActive="active" ariaCurrentWhenActive="page">Strona dla admina</a></ul>
   <ul><a routerLink="/login" routerLinkActive="active" ariaCurrentWhenActive="page">Login</a></ul>
-  <ul><button (click)="logout()" [hidden]="isLoggedIn()">Wyloguj</button></ul>
+  <ul><button (click)="logout()" [hidden]="!isLoggedIn()">Wyloguj</button></ul>
 </li></nav>
 
 <router-outlet />

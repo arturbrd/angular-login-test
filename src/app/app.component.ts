@@ -19,6 +19,7 @@ export class AppComponent {
   }
 
   isLoggedIn(): boolean {
-    return this.loginService.isLoggedIn();
+    return this.loginService.isLoggedIn() && !this.loginService.isExpired();
   }
+
 }

@@ -1,4 +1,3 @@
-import { HttpClient } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
 import { AdminDataService } from '../services/admin-data.service';
 
@@ -11,12 +10,21 @@ import { AdminDataService } from '../services/admin-data.service';
 })
 export class AdminPageComponent {
   private adminDataService = inject(AdminDataService);
+  private adminData = "";
 
   getAdminInfo() {
-    this.adminDataService.requestAdminData().subscribe(response => {
-      console.log('POST request response: ', response);
-    }, error => {
-      console.error('Error occured: ', error);
-    });;
+    this.adminDataService.fetchData().subscribe(
+      response => {
+        console.log("admin-page fetchData(): response: ", response);
+        this.adminData = JSON.stringify(response);
+      },
+      error => {
+        console.log("admin-page fetchData(): error: ", error);
+      }
+    );
+  }
+
+  display() {
+    return this.adminData;
   }
 }
